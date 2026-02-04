@@ -21,6 +21,7 @@ import yaml
 from pathlib import Path
 from numpy import array, cumsum, concatenate, full, arange
 
+
 def read_yaml(path: Path) -> dict:
     """
     Read the yaml file and return it
@@ -42,7 +43,8 @@ def read_yaml(path: Path) -> dict:
             print(exc)
             return {}
 
-def moving_average(a: array, n: float=3) -> array:
+
+def moving_average(a: array, n: float = 3) -> array:
     """
     Compute the moving average of an array
 
@@ -59,11 +61,12 @@ def moving_average(a: array, n: float=3) -> array:
         The moving average of the array
     """
 
-    ret = cumsum(a, dtype=float).reshape(-1,1)
+    ret = cumsum(a, dtype=float).reshape(-1, 1)
     ret[n:] = ret[n:] - ret[:-n]
-    return ret[n - 1:] / n
+    return ret[n - 1 :] / n
 
-def moving_average_and_extend(a: array, n:float=3) -> array:
+
+def moving_average_and_extend(a: array, n: float = 3) -> array:
     """
     Compute the moving average of an array and pad the beginning and the end with the first and last value
 
@@ -81,11 +84,11 @@ def moving_average_and_extend(a: array, n:float=3) -> array:
         The moving average of the array
     """
 
-    ma = moving_average(a, 2*n+1)
-    return concatenate((full(n, a[0]), ma[:,0], full(n, a[-1]))).reshape(-1,1)
+    ma = moving_average(a, 2 * n + 1)
+    return concatenate((full(n, a[0]), ma[:, 0], full(n, a[-1]))).reshape(-1, 1)
 
 
-def swap_words(s: str, x:str, y:str) -> str:
+def swap_words(s: str, x: str, y: str) -> str:
     """
     Swap in a string s, the word x by the word y and vice versa
 
@@ -106,12 +109,16 @@ def swap_words(s: str, x:str, y:str) -> str:
 
     return y.join(part.replace(y, x) for part in s.split(x))
 
+
 if __name__ == "__main__":
     # Example usage
     data = arange(10)
     print("Original data:", data.flatten())
     print("Moving average (n=3):", moving_average(data, n=3).flatten())
-    print("Moving average and extend (n=2):", moving_average_and_extend(data, n=2).flatten())
+    print(
+        "Moving average and extend (n=2):",
+        moving_average_and_extend(data, n=2).flatten(),
+    )
 
     s = "hello world, welcome to the universe"
     print("Original string:", s)

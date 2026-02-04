@@ -24,7 +24,8 @@ from numpy import min as npmin
 from numpy import max as npmax
 from numpy import where, argmax
 
-class Cycler():
+
+class Cycler:
     """
     Class to decompose a gait data on a cycle by cycle basis
     """
@@ -67,17 +68,16 @@ class Cycler():
             if not searchable_data[i]:
                 continue
 
-
             potential_max = argmax(data[i:j]) + i
 
-            if potential_max < start_index or (end_index != -1 and potential_max > end_index):
+            if potential_max < start_index or (
+                end_index != -1 and potential_max > end_index
+            ):
                 continue
-
 
             idx_max_list.append(potential_max)
 
         self.cycles = idx_max_list
-
 
         return self.cycles
 
@@ -92,7 +92,7 @@ class Cycler():
         end = self.cycles[idx_cycle + 1]
         return (start, end)
 
-    def cycle_idxs_generator(self, use_all_idxs: bool =False):
+    def cycle_idxs_generator(self, use_all_idxs: bool = False):
         """
         Generator to yield cycle indexes.
         """
@@ -105,6 +105,7 @@ class Cycler():
             end = self.cycles[i + 1]
             yield (start, end)
 
+
 if __name__ == "__main__":
     # Example usage
     dm = DataManager()
@@ -116,8 +117,10 @@ if __name__ == "__main__":
     cycles = cycler.get_cycles(start_index=walking_task[0], end_index=walking_task[1])
 
     print(f"{dm.subject} - {dm.trial} - {dm.ds_name}")
-    for idx in range(len(cycles)-1):
+    for idx in range(len(cycles) - 1):
         start, end = cycler.get_cycle(idx)
         t_s, t_e = dm.time[start], dm.time[end]
 
-        print(f"Cycle {idx}: from {t_s:.3f} ({start}) to {t_e:.3f} ({end}) | Duration: {t_e - t_s:.3f} s")
+        print(
+            f"Cycle {idx}: from {t_s:.3f} ({start}) to {t_e:.3f} ({end}) | Duration: {t_e - t_s:.3f} s"
+        )

@@ -21,6 +21,7 @@ from numpy import array, zeros
 from matplotlib.pyplot import Axes, axes, Figure, show
 from filter import ExponentialFilter
 
+
 class CLME(Estimator):
     """
     Class representing a CLME estimator.
@@ -77,9 +78,7 @@ class CLME(Estimator):
         self.b_vector = array([[-4.95165438], [-63.33245674]])
 
         # Kalman gain matrix
-        self.kalman_gain = array(
-            [[0.04885665, 0.00370226], [0.17868418, 0.44637239]]
-        )
+        self.kalman_gain = array([[0.04885665, 0.00370226], [0.17868418, 0.44637239]])
         self.kalman_state = zeros((2, 2))
 
         self._k_f_fix = array([[1, 0], [0, 1]])
@@ -89,13 +88,12 @@ class CLME(Estimator):
         self.offset = zeros((2, 1))
 
         self.output_data_col = [
-                "Prosthetic Position CLME",
-                "Prosthetic Velocity CLME",
-                ]
+            "Prosthetic Position CLME",
+            "Prosthetic Velocity CLME",
+        ]
 
         # Initialize the filter
         self.filter_input = ExponentialFilter(0.3)
-
 
     def set_offset(self, offset: array) -> None:
         """
@@ -179,14 +177,15 @@ class CLME(Estimator):
         """
 
         # Compute the Kalman state
-        estimate = (self.a_matrix @ input_data.T + self.b_vector).T + self.offset.reshape(-1)
+        estimate = (
+            self.a_matrix @ input_data.T + self.b_vector
+        ).T + self.offset.reshape(-1)
 
-        k_state = estimate[0,:]
+        k_state = estimate[0, :]
 
         # Preallocate output
         n_data = len(input_data)
         data_out = zeros((n_data, 2))
-
 
         # Save the first step without kalman
         data_out[0, :] = k_state[:]
@@ -198,7 +197,7 @@ class CLME(Estimator):
                 i, :
             ] + self.kalman_gain @ estimate[i + 1, :]
 
-        data_out[:,:] = estimate[:,:]
+        data_out[:, :] = estimate[:, :]
 
         return data_out
 
@@ -211,20 +210,17 @@ class CLME(Estimator):
 
         # Load the data from the data manager
         data_in = self.data_manager.get_data(
-                ["q_r_hip", "qd_r_hip", "q_r_knee", "qd_r_knee"]
-                )
+            ["q_r_hip", "qd_r_hip", "q_r_knee", "qd_r_knee"]
+        )
 
         for i in [0, 1, 2, 3]:
-            data_in[:,i] = self.filter_input.apply(data_in[:,i])
-
-
+            data_in[:, i] = self.filter_input.apply(data_in[:, i])
 
         # Estimate the data
         self.output_data = self.estimate(data_in, self.data_manager.get_dt())
 
-
     def plot(self, axs: None | Axes = None, options: dict = {}) -> Axes:
-        """ Plot the output data
+        """Plot the output data
 
         Parameters
         ----------
@@ -251,21 +247,38 @@ class CLME(Estimator):
             offset += 1
             is_velocity = True
 
-
         # Display position/velocity for the estimator or the true leg
         if options_type in ["position", "velocity"]:
+            data_source = self.data_manager.get_data(
+                [
+                    "time",
+                    f"q{'d' if is_velocity else ''}_l_hip",
+                    f"q{'d' if is_velocity else ''}_r_hip",
+                ]
+            )
 
-
-            data_source = self.data_manager.get_data([
-                "time",
-                f"q{'d' if is_velocity else ''}_l_hip",
-                f"q{'d' if is_velocity else ''}_r_hip"
-                ])
-
-
-            self._overide_plot(axs, data_source[:,0], data_source[:,1], use_cycler=options["cycles"], label=f"Prosthetic {options_type} True")
-            self._overide_plot(axs, data_source[:,0], self.output_data[:,offset], use_cycler=options["cycles"], label=f"Prosthetic {options_type} True CLME")
-            self._overide_plot(axs, data_source[:,0], data_source[:,2], use_cycler=options["cycles"], label=f"Intact {options_type} True CLME", linestyle="--")
+            self._overide_plot(
+                axs,
+                data_source[:, 0],
+                data_source[:, 1],
+                use_cycler=options["cycles"],
+                label=f"Prosthetic {options_type} True",
+            )
+            self._overide_plot(
+                axs,
+                data_source[:, 0],
+                self.output_data[:, offset],
+                use_cycler=options["cycles"],
+                label=f"Prosthetic {options_type} True CLME",
+            )
+            self._overide_plot(
+                axs,
+                data_source[:, 0],
+                data_source[:, 2],
+                use_cycler=options["cycles"],
+                label=f"Intact {options_type} True CLME",
+                linestyle="--",
+            )
 
             axs.set_xlabel("Time (s)")
 
@@ -277,7 +290,7 @@ class CLME(Estimator):
         return axs
 
     def get_help_option_plot(self) -> str:
-        """ Get the help option for the plot function
+        """Get the help option for the plot function
 
         Returns
         -------
@@ -292,8 +305,10 @@ class CLME(Estimator):
             Type of the plot. Can be "position" or "velocity". Default is "position"
         """
 
-    def _complete_plot(self, fig: None | Figure = None, options: dict = {}) -> tuple[Figure, list[Axes]]:
-        """ Complete plot of the estimator
+    def _complete_plot(
+        self, fig: None | Figure = None, options: dict = {}
+    ) -> tuple[Figure, list[Axes]]:
+        """Complete plot of the estimator
 
         Parameters
         ----------
@@ -305,17 +320,11 @@ class CLME(Estimator):
 
         axs = fig.subplots(2, 1)
 
-        self.plot(axs[0], options={
-            "type": "position",
-            **options
-            })
-        self.plot(axs[1], options={
-            "type": "velocity",
-            **options
-            })
-
+        self.plot(axs[0], options={"type": "position", **options})
+        self.plot(axs[1], options={"type": "velocity", **options})
 
         return fig, axs
+
 
 if __name__ == "__main__":
     from data_manager import DataManager

@@ -52,13 +52,12 @@ class Standing(Estimator):
         self.filter_output = ExponentialFilter(0.3)
 
         self.output_data_col = [
-                "Following Position Standing",
-                "Following Velocity Standing",
-                ]
-
+            "Following Position Standing",
+            "Following Velocity Standing",
+        ]
 
     def compute(self) -> None:
-        """ Compute the resulting estimation.
+        """Compute the resulting estimation.
 
         Store the result in the `output_data` attribute
         """
@@ -67,10 +66,8 @@ class Standing(Estimator):
 
         self.output_data = self.filter_output.apply(data_in)
 
-
-
     def plot(self, axs: None | Axes = None, options: dict = {}) -> Axes:
-        """ Plot the output data
+        """Plot the output data
 
         Parameters
         ----------
@@ -97,20 +94,28 @@ class Standing(Estimator):
             offset += 1
             is_velocity = True
 
-
         # Display position/velocity for the estimator or the true leg
         if options_type in ["position", "velocity"]:
+            data_source = self.data_manager.get_data(
+                [
+                    "time",
+                    f"q{'d' if is_velocity else ''}_l_hip",
+                    f"q{'d' if is_velocity else ''}_r_hip",
+                ]
+            )
 
-
-            data_source = self.data_manager.get_data([
-                "time",
-                f"q{'d' if is_velocity else ''}_l_hip",
-                f"q{'d' if is_velocity else ''}_r_hip",
-                ])
-
-            axs.plot(data_source[:,0], data_source[:,1], label="Following Position True")
-            axs.plot(data_source[:,0], data_source[:,2], label="Leading Position True")
-            axs.plot(data_source[:,0], self.output_data[:,offset], label=self.output_data_col[offset], linestyle="--")
+            axs.plot(
+                data_source[:, 0], data_source[:, 1], label="Following Position True"
+            )
+            axs.plot(
+                data_source[:, 0], data_source[:, 2], label="Leading Position True"
+            )
+            axs.plot(
+                data_source[:, 0],
+                self.output_data[:, offset],
+                label=self.output_data_col[offset],
+                linestyle="--",
+            )
             axs.set_xlabel("Time (s)")
 
             if not is_velocity:
@@ -120,14 +125,17 @@ class Standing(Estimator):
 
         if options_type == "error":
             self.errors()
-            axs.plot(self.data_manager.get_data(["time"])[:,0], self.error_data[:,0], label="Position Error")
+            axs.plot(
+                self.data_manager.get_data(["time"])[:, 0],
+                self.error_data[:, 0],
+                label="Position Error",
+            )
             # axs.plot(self.error_data[:,0],self.error_data[:,1], label="Position Error")
 
         return axs
 
-
     def get_help_option_plot(self) -> str:
-        """ Get the help option for the plot function
+        """Get the help option for the plot function
 
         Returns
         -------
@@ -142,8 +150,10 @@ class Standing(Estimator):
             Type of the plot. Can be "position" or "velocity". Default is "position"
         """
 
-    def _complete_plot(self, fig: None | Figure = None, options: dict = {}) -> tuple[Figure, list[Axes]]:
-        """ Complete plot of the estimator
+    def _complete_plot(
+        self, fig: None | Figure = None, options: dict = {}
+    ) -> tuple[Figure, list[Axes]]:
+        """Complete plot of the estimator
 
         Parameters
         ----------
@@ -155,17 +165,23 @@ class Standing(Estimator):
 
         axs = fig.subplots(2, 1)
 
-        self.plot(axs[0], options={
-            "type": "position",
-            })
-        self.plot(axs[1], options={
-            "type": "velocity",
-            })
+        self.plot(
+            axs[0],
+            options={
+                "type": "position",
+            },
+        )
+        self.plot(
+            axs[1],
+            options={
+                "type": "velocity",
+            },
+        )
 
         return fig, axs
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     dm = DataManager()
     res = dm.load_data("P01", "exp_transition_03-S3_01", DS_TYPE.DEVILLEZ)
 
@@ -176,5 +192,8 @@ if __name__ == "__main__":
     standing = Standing(dm)
     standing.compute()
 
-    fig, axs, = standing.complete_plot(None, {"cycles": False})
+    (
+        fig,
+        axs,
+    ) = standing.complete_plot(None, {"cycles": False})
     show()

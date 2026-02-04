@@ -62,7 +62,12 @@ class StandWalk(Estimator):
     filtered_input_values: array
     filter_velocity_log: AsymExpFilter
 
-    def __init__(self, source_of_data: DataManager, estimator_stand: Estimator, estimator_walk: Estimator) -> None:
+    def __init__(
+        self,
+        source_of_data: DataManager,
+        estimator_stand: Estimator,
+        estimator_walk: Estimator,
+    ) -> None:
         """
         Initialize a StandWalk estimator with a data manager
 
@@ -84,18 +89,16 @@ class StandWalk(Estimator):
         self.logistic = Logistic(0.4, 15, None, inverse=False)
 
         self.output_data_col = [
-                "Following Position SW",
-                "Following Velocity SW",
-                ]
+            "Following Position SW",
+            "Following Velocity SW",
+        ]
 
         # Initialize the filter
         self.filter_velocity_log = AsymExpFilter(0.96)
 
-
-
     @property
     def sub_estimators(self):
-        """ Sub-estimators of the estimator
+        """Sub-estimators of the estimator
 
         Returns
         -------
@@ -105,12 +108,11 @@ class StandWalk(Estimator):
         return [self.estimator_stand, self.estimator_walk]
 
     def compute(self) -> None:
-        """ Compute the resulting estimation."""
+        """Compute the resulting estimation."""
 
         input_data = self.data_manager.get_data(["qd_r_hip"])
         input_data = npabs(input_data)
         input_data = self.filter_velocity_log.apply(input_data)
-
 
         w_values = 1 - self.logistic.compute(input_data)
 
@@ -121,8 +123,10 @@ class StandWalk(Estimator):
         self.estimator_stand.compute()
         self.estimator_walk.compute()
 
-        self.output_data = w_values * self.estimator_walk.output_data + (1 - w_values) * self.estimator_stand.output_data
-
+        self.output_data = (
+            w_values * self.estimator_walk.output_data
+            + (1 - w_values) * self.estimator_stand.output_data
+        )
 
     def plot(self, axs: None | Axes = None, options: dict = {}) -> Axes:
         """
@@ -151,52 +155,94 @@ class StandWalk(Estimator):
             offset = 1
             is_velocity = True
 
-
         # For logistic and debug
         data_source = self.data_manager.get_data(["qd_r_hip"])
-        before_log = npabs(data_source[:,0])
+        before_log = npabs(data_source[:, 0])
         filt = ExponentialFilter(0.1, base_value=0)
         input_data = filt.apply(before_log)
-
 
         if options_type in ["position", "velocity"]:
             data_source = self.data_manager.get_data(["time", "q_l_hip", "qd_l_hip"])
 
-            axs.plot(data_source[:,0], data_source[:,1+offset], label=f"Following {'Velocity' if is_velocity else 'Position'} True", linewidth=4)
-            axs.plot(data_source[:,0], self.output_data[:, 0+offset], label=self.output_data_col[offset], linewidth = 3)
-            axs.plot(data_source[:,0], self.estimator_walk.output_data[:,0 + offset], label=self.estimator_walk.output_data_col[offset], linewidth = 2, linestyle="--")
-            axs.plot(data_source[:,0], self.estimator_stand.output_data[:,0 + offset], label=self.estimator_stand.output_data_col[offset],linewidth = 1)
+            axs.plot(
+                data_source[:, 0],
+                data_source[:, 1 + offset],
+                label=f"Following {'Velocity' if is_velocity else 'Position'} True",
+                linewidth=4,
+            )
+            axs.plot(
+                data_source[:, 0],
+                self.output_data[:, 0 + offset],
+                label=self.output_data_col[offset],
+                linewidth=3,
+            )
+            axs.plot(
+                data_source[:, 0],
+                self.estimator_walk.output_data[:, 0 + offset],
+                label=self.estimator_walk.output_data_col[offset],
+                linewidth=2,
+                linestyle="--",
+            )
+            axs.plot(
+                data_source[:, 0],
+                self.estimator_stand.output_data[:, 0 + offset],
+                label=self.estimator_stand.output_data_col[offset],
+                linewidth=1,
+            )
 
             axs.set_ylabel("Position (deg)")
 
         elif options_type == "logistic":
-
             data_source = self.data_manager.get_data(["time"])
             raw_logistic = 1 - self.logistic.compute(input_data)
-            axs.plot(data_source[:,0], raw_logistic, label="Logistic Raw", linewidth = 4)
-            axs.plot(data_source[:,0], self.logistic_values, label="Logistic with exp filter", linewidth = 4)
+            axs.plot(data_source[:, 0], raw_logistic, label="Logistic Raw", linewidth=4)
+            axs.plot(
+                data_source[:, 0],
+                self.logistic_values,
+                label="Logistic with exp filter",
+                linewidth=4,
+            )
 
             axs.set_ylabel("Gain")
 
         elif options_type == "debug":
             data_source = self.data_manager.get_data(["time", "q_r_hip"])
 
-            filter_positon = moving_average_and_extend(data_source[:,1], 10)
-            deriv = (filter_positon[1:,0] - filter_positon[:-1, 0] ) / (data_source[1:,0] - data_source[:-1,0])
+            filter_positon = moving_average_and_extend(data_source[:, 1], 10)
+            deriv = (filter_positon[1:, 0] - filter_positon[:-1, 0]) / (
+                data_source[1:, 0] - data_source[:-1, 0]
+            )
             deriv = npabs(deriv)
 
-            axs.plot(data_source[:,0], before_log , label="Leading hip velocity", linewidth = 4)
-            axs.plot(data_source[:,0], self.filtered_input_values , label="Filtered velocity (log)", linewidth = 3)
-            axs.plot(data_source[:-1,0], deriv , label="Abs deriv of Leading hip position", linewidth = 1)
-            axs.plot([data_source[0,0], data_source[-1,0]], [self.logistic.median, self.logistic.median] , label="threshold logistic function", linewidth = 1, linestyle="--")
+            axs.plot(
+                data_source[:, 0], before_log, label="Leading hip velocity", linewidth=4
+            )
+            axs.plot(
+                data_source[:, 0],
+                self.filtered_input_values,
+                label="Filtered velocity (log)",
+                linewidth=3,
+            )
+            axs.plot(
+                data_source[:-1, 0],
+                deriv,
+                label="Abs deriv of Leading hip position",
+                linewidth=1,
+            )
+            axs.plot(
+                [data_source[0, 0], data_source[-1, 0]],
+                [self.logistic.median, self.logistic.median],
+                label="threshold logistic function",
+                linewidth=1,
+                linestyle="--",
+            )
 
             axs.set_ylabel("Velocity (deg/s)")
-
 
         return axs
 
     def get_help_option_plot(self) -> str:
-        """ Get the help option for the plot function
+        """Get the help option for the plot function
 
         Returns
         -------
@@ -215,8 +261,10 @@ class StandWalk(Estimator):
             - debug : Debug information
         """
 
-    def _complete_plot(self, fig: None | Figure = None, options: dict = {}) -> tuple[Figure, list[Axes]]:
-        """ Complete plot of the estimator
+    def _complete_plot(
+        self, fig: None | Figure = None, options: dict = {}
+    ) -> tuple[Figure, list[Axes]]:
+        """Complete plot of the estimator
 
         Parameters
         ----------
@@ -228,21 +276,31 @@ class StandWalk(Estimator):
 
         axs = fig.subplots(3, 1)
 
-        self.plot(axs[0], options={
-            "type": "position",
-            })
-        self.plot(axs[1], options={
-            "type": "logistic",
-            })
-        self.plot(axs[2], options={
-            "type": "debug",
-            })
-
+        self.plot(
+            axs[0],
+            options={
+                "type": "position",
+            },
+        )
+        self.plot(
+            axs[1],
+            options={
+                "type": "logistic",
+            },
+        )
+        self.plot(
+            axs[2],
+            options={
+                "type": "debug",
+            },
+        )
 
         return fig, axs
 
-    def _post_plot(self, fig: None | Figure = None, axs: list[Axes] = [], options: dict = {}) -> tuple[Figure, list[Axes]]:
-        """ Post plot of the estimator
+    def _post_plot(
+        self, fig: None | Figure = None, axs: list[Axes] = [], options: dict = {}
+    ) -> tuple[Figure, list[Axes]]:
+        """Post plot of the estimator
 
         Parameters
         ----------
@@ -254,10 +312,11 @@ class StandWalk(Estimator):
             Dictionary of options to plot the data
         """
 
-        for i in range(len(axs)-1):
+        for i in range(len(axs) - 1):
             setp(axs[i].get_xticklabels(), visible=False)
 
         return fig, axs
+
 
 if __name__ == "__main__":
     dm = DataManager()

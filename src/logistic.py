@@ -1,12 +1,14 @@
 """
 Module to define all the logistic functions used in the estimators
 """
+
 import numpy as np
 import matplotlib.pyplot as plt
 
 
 def logistic(steep, median, x):
     return 1 / (1 + np.exp(steep * (x - median)))
+
 
 class Logistic:
     """
@@ -70,7 +72,6 @@ class FuseFonction:
         return np.prod([f() for f in self.functions])
 
 
-
 class TimeLogistic(Logistic):
     """
     Class representing a logistic function of time.
@@ -101,20 +102,16 @@ class TimeLogistic(Logistic):
         return super().compute(current_time - self.time)
 
 
-
 if __name__ == "__main__":
-
     x = np.linspace(0, 20, 200)
     time_log = TimeLogistic(steep=1, time_half=3, inverse=True)
     y = np.zeros(x.shape)
 
     for idx, xi in enumerate(x):
-
         if xi < 5:
             time_log.reset_time(xi)
 
         y[idx] = time_log.compute(xi)
-
 
     plt.figure()
     plt.plot(x, y)

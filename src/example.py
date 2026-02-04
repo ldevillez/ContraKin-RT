@@ -25,6 +25,7 @@ from standwalk_estimator import StandWalk
 
 from parameter_manager import set_parameters
 
+
 def single_SW_plot() -> None:
     """
     Function to demonstrate the StandWalk estimator on a trial.
@@ -47,7 +48,7 @@ def single_SW_plot() -> None:
     sw = StandWalk(dm, standing, clme_ao)
 
     # Set parameters
-    set_parameters(clme) # Only the CLME require parameter setting
+    set_parameters(clme)  # Only the CLME require parameter setting
 
     # Compute estimator
     sw.compute()
@@ -65,14 +66,14 @@ def multiple_SW_errors() -> None:
     # Get iterator object to go over the dataset
 
     dmi = get_populated_dmi()
-    errors = np.zeros((len(dmi),2))
+    errors = np.zeros((len(dmi), 2))
     for idx, (ds_name, subject, trial) in enumerate(dmi):
         dm = DataManager()
         res = dm.load_data(subject, trial, ds_name)
         if not res:
             print(f"Failed to load data for {subject} {trial}")
             continue
-        
+
         # define estimator object
         clme = CLME(dm)
         ao = AO(dm)
@@ -88,13 +89,11 @@ def multiple_SW_errors() -> None:
         # Compute errors
         sw.errors()
         errors[idx, :] = np.mean(np.abs(sw.error_data), axis=0)
-    
+
     # Mean error over all trials
     mean_errors = np.mean(errors, axis=0)
     print(f"Mean Position Error: {mean_errors[0]:.4f} deg")
     print(f"Mean Velocity Error: {mean_errors[1]:.4f} deg/s")
-
-
 
 
 if __name__ == "__main__":

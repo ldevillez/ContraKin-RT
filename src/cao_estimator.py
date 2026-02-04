@@ -16,7 +16,6 @@ Example
 > fig, axs, = clme_ao.complete_plot()
 """
 
-
 from matplotlib.pyplot import Axes, axes, Figure, show
 from numpy import array, zeros
 from numpy import abs as npabs
@@ -29,6 +28,7 @@ from data_manager import DataManager, DS_TYPE
 from logistic import Logistic, TimeLogistic
 from filter import AsymExpFilter
 import colors
+
 
 class ClmeAO(Estimator):
     """
@@ -60,11 +60,10 @@ class ClmeAO(Estimator):
     logistics: list[Logistic]
 
     output_data: array
-    logistic_values : array
+    logistic_values: array
 
     convergence_filter: AsymExpFilter
     convergences_filtered: array
-
 
     def __init__(self, source_of_data: DataManager, clme: CLME, ao: AO) -> None:
         """
@@ -81,22 +80,22 @@ class ClmeAO(Estimator):
         self.ao = ao
 
         self.logistics = [
-                Logistic(0.8422, 6.591, None, inverse=False),
-                TimeLogistic(4, 1.5),
-                Logistic(0.83299, 4.597, None, inverse=False),
-                TimeLogistic(3, 1.25),
-                ]
+            Logistic(0.8422, 6.591, None, inverse=False),
+            TimeLogistic(4, 1.5),
+            Logistic(0.83299, 4.597, None, inverse=False),
+            TimeLogistic(3, 1.25),
+        ]
 
         self.output_data_col = [
-                "Following Position CLME-AO",
-                "Following Velocity CLME-AO",
-                ]
+            "Following Position CLME-AO",
+            "Following Velocity CLME-AO",
+        ]
 
         self.convergence_filter = AsymExpFilter(0.992)
 
     @property
     def sub_estimators(self):
-        """ Sub-estimators of the estimator
+        """Sub-estimators of the estimator
 
         Returns
         -------
@@ -106,7 +105,7 @@ class ClmeAO(Estimator):
         return [self.clme, self.ao]
 
     def compute(self) -> None:
-        """ Compute the resulting estimation."""
+        """Compute the resulting estimation."""
 
         self.clme.compute()
         self.ao.compute()
@@ -117,33 +116,42 @@ class ClmeAO(Estimator):
         self.convergences_filtered = self.convergence_filter.apply(npabs(convergence))
 
         self.output_data = zeros((self.clme.output_data.shape[0], 2))
-        self.logistic_values = zeros((self.clme.output_data.shape[0], len(self.logistics)+2))
+        self.logistic_values = zeros(
+            (self.clme.output_data.shape[0], len(self.logistics) + 2)
+        )
 
         # Time and position_logistic
         self.logistics[1].reset_time(self.data_manager.time[0])
         self.logistics[3].reset_time(self.data_manager.time[0])
 
         for idx_time, t in enumerate(self.data_manager.time):
-
             for i in range(2):
                 # Compute the logistic function
-                idx_log = 2*i
-                idx_time_log = 2*i+1
+                idx_log = 2 * i
+                idx_time_log = 2 * i + 1
 
-                self.logistic_values[idx_time,idx_log] = self.logistics[idx_log].compute(self.convergences_filtered[idx_time])
+                self.logistic_values[idx_time, idx_log] = self.logistics[
+                    idx_log
+                ].compute(self.convergences_filtered[idx_time])
                 # Time logistic
-                if self.logistic_values[idx_time,idx_log] < 0.5:
+                if self.logistic_values[idx_time, idx_log] < 0.5:
                     self.logistics[idx_time_log].reset_time(t)
 
-                self.logistic_values[idx_time,idx_time_log] = self.logistics[idx_time_log].compute(t)
+                self.logistic_values[idx_time, idx_time_log] = self.logistics[
+                    idx_time_log
+                ].compute(t)
 
-                log_val = self.logistic_values[idx_time,idx_log] * self.logistic_values[idx_time,idx_time_log]
+                log_val = (
+                    self.logistic_values[idx_time, idx_log]
+                    * self.logistic_values[idx_time, idx_time_log]
+                )
 
-                self.logistic_values[idx_time,4+i] =log_val
+                self.logistic_values[idx_time, 4 + i] = log_val
 
-                self.output_data[idx_time,i] = log_val * self.ao.output_data[idx_time,i] + (1 - log_val) * self.clme.output_data[idx_time,i]
-
-
+                self.output_data[idx_time, i] = (
+                    log_val * self.ao.output_data[idx_time, i]
+                    + (1 - log_val) * self.clme.output_data[idx_time, i]
+                )
 
     def plot(self, axs: None | Axes = None, options: dict = {}) -> Axes:
         """
@@ -172,15 +180,34 @@ class ClmeAO(Estimator):
             offset = 1
             is_velocity = True
 
-
         if options_type in ["position", "velocity"]:
             data_source = self.data_manager.get_data(["time", "q_l_hip", "qd_l_hip"])
 
-            axs.plot(data_source[:,0], data_source[:,1+offset], label=f"Following {'Velocity' if is_velocity else 'Position'}", linewidth=4)
-            axs.plot(data_source[:,0], self.output_data[:, 0+offset], label=self.output_data_col[offset], linewidth = 3)
-            axs.plot(data_source[:,0], self.clme.output_data[:,0 + offset], label=self.clme.output_data_col[offset], linewidth = 2, linestyle="--")
-            axs.plot(data_source[:,0], self.ao.output_data[:,0 + offset], label=self.ao.output_data_col[offset],linewidth = 1)
-
+            axs.plot(
+                data_source[:, 0],
+                data_source[:, 1 + offset],
+                label=f"Following {'Velocity' if is_velocity else 'Position'}",
+                linewidth=4,
+            )
+            axs.plot(
+                data_source[:, 0],
+                self.output_data[:, 0 + offset],
+                label=self.output_data_col[offset],
+                linewidth=3,
+            )
+            axs.plot(
+                data_source[:, 0],
+                self.clme.output_data[:, 0 + offset],
+                label=self.clme.output_data_col[offset],
+                linewidth=2,
+                linestyle="--",
+            )
+            axs.plot(
+                data_source[:, 0],
+                self.ao.output_data[:, 0 + offset],
+                label=self.ao.output_data_col[offset],
+                linewidth=1,
+            )
 
             if not is_velocity:
                 axs.set_ylabel("Position (deg)")
@@ -188,21 +215,47 @@ class ClmeAO(Estimator):
                 axs.set_ylabel("Velocity (deg/s)")
 
         elif options_type == "logistic":
-
             data_source = self.data_manager.get_data(["time"])
-            axs.plot(data_source[:,0], self.logistic_values[:,0], label="Logistic Position", linewidth = 4)
-            axs.plot(data_source[:,0], self.logistic_values[:,1], label="Logistic Time", linewidth = 3, linestyle="--")
-            axs.plot(data_source[:,0], self.logistic_values[:,4], label="Logistic Tot", linewidth = 3, linestyle="-.")
+            axs.plot(
+                data_source[:, 0],
+                self.logistic_values[:, 0],
+                label="Logistic Position",
+                linewidth=4,
+            )
+            axs.plot(
+                data_source[:, 0],
+                self.logistic_values[:, 1],
+                label="Logistic Time",
+                linewidth=3,
+                linestyle="--",
+            )
+            axs.plot(
+                data_source[:, 0],
+                self.logistic_values[:, 4],
+                label="Logistic Tot",
+                linewidth=3,
+                linestyle="-.",
+            )
 
             # Set lim between 0 and 1
             axs.set_ylim(0, 1)
             axs.set_ylabel("Logistic value (·)")
 
         elif options_type == "convergence":
-
             data_source = self.data_manager.get_data(["time"])
-            axs.plot(data_source[:,0], self.ao.get_convergences(), label="Convergence non-filtered", linewidth = 4)
-            axs.plot(data_source[:,0], self.convergences_filtered, label="Convergence filtered", linewidth = 3, linestyle="--")
+            axs.plot(
+                data_source[:, 0],
+                self.ao.get_convergences(),
+                label="Convergence non-filtered",
+                linewidth=4,
+            )
+            axs.plot(
+                data_source[:, 0],
+                self.convergences_filtered,
+                label="Convergence filtered",
+                linewidth=3,
+                linestyle="--",
+            )
 
             axs.set_ylabel("Convergence (deg)")
 
@@ -211,7 +264,7 @@ class ClmeAO(Estimator):
         return axs
 
     def get_help_option_plot(self) -> str:
-        """ Get the help option for the plot function
+        """Get the help option for the plot function
 
         Returns
         -------
@@ -229,8 +282,10 @@ class ClmeAO(Estimator):
             - logistic : Logistic value
         """
 
-    def _complete_plot(self, fig: None | Figure = None, options: dict = {}) -> tuple[Figure, list[Axes]]:
-        """ Complete plot of the estimator
+    def _complete_plot(
+        self, fig: None | Figure = None, options: dict = {}
+    ) -> tuple[Figure, list[Axes]]:
+        """Complete plot of the estimator
 
         Parameters
         ----------
@@ -243,23 +298,35 @@ class ClmeAO(Estimator):
         axs = fig.subplots(4, 1)
 
         self.color_cycler = colors.get_color_cycler()
-        self.plot(axs[0], options={
-            "type": "position",
-            })
-        self.plot(axs[1], options={
-            "type": "logistic",
-            })
-        self.plot(axs[2], options={
-            "type": "convergence",
-            })
+        self.plot(
+            axs[0],
+            options={
+                "type": "position",
+            },
+        )
+        self.plot(
+            axs[1],
+            options={
+                "type": "logistic",
+            },
+        )
+        self.plot(
+            axs[2],
+            options={
+                "type": "convergence",
+            },
+        )
         self.color_cycler = colors.get_color_cycler()
         self.ao.color_cycler = self.color_cycler
-        self.ao.plot(axs[3], options={
-            "leg": "leading",
-            })
-
+        self.ao.plot(
+            axs[3],
+            options={
+                "leg": "leading",
+            },
+        )
 
         return fig, axs
+
 
 if __name__ == "__main__":
     dm = DataManager()

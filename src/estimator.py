@@ -68,7 +68,7 @@ class Estimator:
 
     @property
     def sub_estimators(self) -> list:
-        """ Sub-estimators of the estimator
+        """Sub-estimators of the estimator
 
         Returns
         -------
@@ -78,7 +78,7 @@ class Estimator:
         return []
 
     def compute(self) -> None:
-        """ Compute the resulting estimation.
+        """Compute the resulting estimation.
 
         Store the result in the `output_data` attribute
         """
@@ -92,14 +92,12 @@ class Estimator:
 
         """
 
-        data_in = self.data_manager.get_data(
-                ["q_l_hip", "qd_l_hip"]
-                )
+        data_in = self.data_manager.get_data(["q_l_hip", "qd_l_hip"])
 
-        self.error_data = data_in[:,:2] - self.output_data[:,:2]
+        self.error_data = data_in[:, :2] - self.output_data[:, :2]
 
     def plot(self, axs: None | Axes = None, options: dict = {}) -> Axes:
-        """ Plot the output data
+        """Plot the output data
         Parameters
         ----------
         axs : None | Axes
@@ -111,7 +109,7 @@ class Estimator:
         return axs if axs is not None else Axes()
 
     def get_help_option_plot(self) -> str:
-        """ Get the help option for the plot function
+        """Get the help option for the plot function
 
         Returns
         -------
@@ -121,15 +119,16 @@ class Estimator:
 
         return "No help available"
 
-    def _overide_plot(self, ax, x, y, use_cycler = False, **args):
+    def _overide_plot(self, ax, x, y, use_cycler=False, **args):
         """
         Override the plot function to customize the plot.
         """
 
         if "color" not in args:
-            style = self.color_cycler[args["label"] + self.data_manager.subject + self.data_manager.trial]
+            style = self.color_cycler[
+                args["label"] + self.data_manager.subject + self.data_manager.trial
+            ]
             args.update(style)
-
 
         if use_cycler:
             cycler = None
@@ -152,7 +151,7 @@ class Estimator:
         return ax
 
     def get_help_option_complete_plot(self) -> str:
-        """ Get the help option for the complete_plot function
+        """Get the help option for the complete_plot function
 
         Returns
         -------
@@ -162,8 +161,10 @@ class Estimator:
 
         return "No help available"
 
-    def complete_plot(self, fig: None | Figure = None, options: dict = {}) -> tuple[Figure, list[Axes]]:
-        """ Complete plot of the estimator
+    def complete_plot(
+        self, fig: None | Figure = None, options: dict = {}
+    ) -> tuple[Figure, list[Axes]]:
+        """Complete plot of the estimator
         Each estimator will redefine the sub function _complete_plot
 
         Parameters
@@ -209,20 +210,21 @@ class Estimator:
 
             ax.legend(handles, labels, bbox_to_anchor=(1.01, 1), loc="upper left")
 
-
-
             if idx > 0:
                 ax.sharex(axs[0])
 
-
-        fig.suptitle(f"{self.name} - {self.data_manager.subject} - {self.data_manager.trial}")
+        fig.suptitle(
+            f"{self.name} - {self.data_manager.subject} - {self.data_manager.trial}"
+        )
 
         self._post_plot(fig, axs, options)
 
         return fig, axs
 
-    def _complete_plot(self, fig: None | Figure = None, options: dict = {}) -> tuple[Figure, list[Axes]]:
-        """ Complete plot of the estimator
+    def _complete_plot(
+        self, fig: None | Figure = None, options: dict = {}
+    ) -> tuple[Figure, list[Axes]]:
+        """Complete plot of the estimator
 
         Parameters
         ----------
@@ -234,8 +236,10 @@ class Estimator:
 
         return fig, []
 
-    def _post_plot(self, fig: None | Figure = None, axs: list[Axes] = [], options: dict = {}) -> tuple[Figure, list[Axes]]:
-        """ Post plot of the estimator
+    def _post_plot(
+        self, fig: None | Figure = None, axs: list[Axes] = [], options: dict = {}
+    ) -> tuple[Figure, list[Axes]]:
+        """Post plot of the estimator
 
         Parameters
         ----------
@@ -248,6 +252,7 @@ class Estimator:
         """
 
         return fig, axs
+
 
 if __name__ == "__main__":
     print("This is a base class for estimators. It should not be run directly.")

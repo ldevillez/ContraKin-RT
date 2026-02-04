@@ -23,6 +23,7 @@ Example
 
 from numpy import array, zeros
 
+
 class Filter:
     """
     Generic class to represent a filter.
@@ -107,8 +108,9 @@ class BidirExpFilter(Filter):
     alpha_greater: float
     alpha_smaller: float
 
-
-    def __init__(self, alpha_greater: float = 0.95, alpha_smaller: float = 0.85, base_value=0) -> None:
+    def __init__(
+        self, alpha_greater: float = 0.95, alpha_smaller: float = 0.85, base_value=0
+    ) -> None:
         """
         Initialize a BidirExpFilter
 
@@ -126,8 +128,6 @@ class BidirExpFilter(Filter):
         self.alpha_greater = alpha_greater
         self.alpha_smaller = alpha_smaller
 
-
-
     def __call__(self, input_value) -> float:
         """
         Filtering the input value with decay
@@ -143,11 +143,18 @@ class BidirExpFilter(Filter):
         """
 
         if input_value > self.output_value:
-            self.output_value = self.alpha_greater * self.output_value + (1 - self.alpha_greater) * input_value
+            self.output_value = (
+                self.alpha_greater * self.output_value
+                + (1 - self.alpha_greater) * input_value
+            )
         else:
-            self.output_value = self.alpha_smaller * self.output_value + (1 - self.alpha_smaller) * input_value
+            self.output_value = (
+                self.alpha_smaller * self.output_value
+                + (1 - self.alpha_smaller) * input_value
+            )
 
         return self.get()
+
 
 class AsymExpFilter(BidirExpFilter):
     """
@@ -157,12 +164,13 @@ class AsymExpFilter(BidirExpFilter):
     else the output value is computed with a exponential filter.
     """
 
-    def __init__(self, alpha_smaller: float = 0.9, base_value = 0) -> None:
+    def __init__(self, alpha_smaller: float = 0.9, base_value=0) -> None:
         """
         Initialize an AsymExpFilter
         """
 
         super().__init__(0.0, alpha_smaller, base_value)
+
 
 class ExponentialFilter(Filter):
     """
@@ -173,7 +181,7 @@ class ExponentialFilter(Filter):
 
     alpha: float
 
-    def __init__(self, alpha: float = 0.1, base_value = 0) -> None:
+    def __init__(self, alpha: float = 0.1, base_value=0) -> None:
         """
         Initialize an ExponentialFilter
 
@@ -202,9 +210,12 @@ class ExponentialFilter(Filter):
             The filtered output value.
         """
 
-        self.output_value = self.alpha * input_value + (1 - self.alpha) * self.output_value
+        self.output_value = (
+            self.alpha * input_value + (1 - self.alpha) * self.output_value
+        )
 
         return self.get()
+
 
 if __name__ == "__main__":
     # Example usage of the filters

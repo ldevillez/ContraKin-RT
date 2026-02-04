@@ -32,6 +32,7 @@ import colors
 LOW_BOUND = 0.5
 HIGH_BOUND = 5e3
 
+
 class AO(Estimator):
     """
     Class representing a AO estimator.
@@ -72,7 +73,6 @@ class AO(Estimator):
     __old_eval: array
     _omegas_data: array
 
-
     def __init__(self, source_of_data: DataManager, n_osc: float = 2) -> None:
         """
         Initialize a AO estimator with a data manager
@@ -92,13 +92,12 @@ class AO(Estimator):
         self.set_gains_period(period)
 
         self.output_data_col = [
-                "Prosthetic Position AO",
-                "Prosthetic Velocity AO",
-                "Intact Position AO",
-                "Intact Velocity AO",
-                "Convergence"
-                ]
-
+            "Prosthetic Position AO",
+            "Prosthetic Velocity AO",
+            "Intact Position AO",
+            "Intact Velocity AO",
+            "Convergence",
+        ]
 
     def set_gains_period(self, period: float) -> None:
         """
@@ -109,7 +108,7 @@ class AO(Estimator):
         period : float
             Period of learing for the oscillators
         """
-        self.nu_omega = 20 / (0.5 * period) **2
+        self.nu_omega = 20 / (0.5 * period) ** 2
         self.nu_phi = sqrt(24.2 * self.nu_omega)
         self.eta = 2 / (0.5 * period)
 
@@ -131,7 +130,7 @@ class AO(Estimator):
         self.nu_phi = nu_phi
         self.eta = eta
 
-    def reset(self, frequency:float=LOW_BOUND, amplitude:float=1) -> None:
+    def reset(self, frequency: float = LOW_BOUND, amplitude: float = 1) -> None:
         """
         Reset the AO estimator
 
@@ -143,7 +142,7 @@ class AO(Estimator):
             Amplitude of the oscillators
         """
 
-        self.alphas = zeros(self.n_osc+1)
+        self.alphas = zeros(self.n_osc + 1)
         self.alphas[0] = amplitude
         self.omega = frequency
 
@@ -152,7 +151,7 @@ class AO(Estimator):
 
         self.__old_eval = zeros(2)
 
-    def evaluate(self, offset:float = 0) -> array:
+    def evaluate(self, offset: float = 0) -> array:
         """
         Evaluate the AO estimator
 
@@ -175,7 +174,7 @@ class AO(Estimator):
         alpha_bis = self.omega * self.alphas[1:] * suite
 
         self.__old_eval[0] = self.alphas[0] + (self.alphas[1:].T @ sin(phase))
-        self.__old_eval[1] = (alpha_bis.T @ cos(phase))
+        self.__old_eval[1] = alpha_bis.T @ cos(phase)
 
         return self.__old_eval
 
@@ -194,7 +193,6 @@ class AO(Estimator):
         # Compute the convergence / error
         theta_est = self.evaluate()
         epsilon = theta - theta_est[0]
-
 
         # Compute the frequency of each OAs
         freq = arange(1, self.n_osc + 1) * self.omega
@@ -268,7 +266,7 @@ class AO(Estimator):
         self.omegas_data[0, 0] = self.omega
         for i in range(1, n_data):
             # Compute the learning step
-            data_out[i, 4] = self.step(input_data[i-1, 0], dt)
+            data_out[i, 4] = self.step(input_data[i - 1, 0], dt)
 
             # Get the estimation of the leading leg
             data_out[i, 2:4] = self.__old_eval
@@ -278,7 +276,6 @@ class AO(Estimator):
 
             # Get Omega
             self.omegas_data[i, 0] = self.omega
-
 
         return data_out
 
@@ -293,16 +290,13 @@ class AO(Estimator):
         self.reset()
 
         # Load the data from the data manager
-        data_in = self.data_manager.get_data(
-                ["q_r_hip"]
-                )
-
+        data_in = self.data_manager.get_data(["q_r_hip"])
 
         # Estimate the data
         self.output_data = self.estimate(data_in, self.data_manager.get_dt())
 
     def plot(self, axs: None | Axes = None, options: dict = {}) -> Axes:
-        """ Plot the output data
+        """Plot the output data
 
         Parameters
         ----------
@@ -329,7 +323,6 @@ class AO(Estimator):
             offset += 1
             is_velocity = True
 
-
         ## Leg, following or leading
         if "leg" in options:
             options_leg = options["leg"]
@@ -346,15 +339,28 @@ class AO(Estimator):
 
         # Display position/velocity for the estimator or the true leg
         if options_type in ["position", "velocity"]:
+            data_source = self.data_manager.get_data(
+                [
+                    "time",
+                    f"q{'d' if is_velocity else ''}_{'r' if is_leading else 'l'}_hip",
+                ]
+            )
 
-
-            data_source = self.data_manager.get_data([
-                "time",
-                f"q{'d' if is_velocity else ''}_{'r' if is_leading else 'l'}_hip"
-                ])
-
-            self._overide_plot(axs, data_source[:,0], data_source[:,1], use_cycler=options["cycles"], label=f"{'Intact' if is_leading else 'Prosthetic'} {'velocity' if is_velocity else 'Position'} truth")
-            self._overide_plot(axs, data_source[:,0], self.output_data[:,offset], use_cycler=options["cycles"], label=self.output_data_col[offset], linestyle="--")
+            self._overide_plot(
+                axs,
+                data_source[:, 0],
+                data_source[:, 1],
+                use_cycler=options["cycles"],
+                label=f"{'Intact' if is_leading else 'Prosthetic'} {'velocity' if is_velocity else 'Position'} truth",
+            )
+            self._overide_plot(
+                axs,
+                data_source[:, 0],
+                self.output_data[:, offset],
+                use_cycler=options["cycles"],
+                label=self.output_data_col[offset],
+                linestyle="--",
+            )
 
             axs.set_xlabel("Time (s)")
 
@@ -363,29 +369,44 @@ class AO(Estimator):
             else:
                 axs.set_ylabel("Velocity (deg/s)")
         elif options_type == "convergence":
+            data_source = self.data_manager.get_data(
+                [
+                    "time",
+                ]
+            )
 
-            data_source = self.data_manager.get_data([
-                "time",
-                ])
-
-            self._overide_plot(axs, data_source[:,0], self.output_data[:,4], use_cycler=options["cycles"], label=self.output_data_col[4])
+            self._overide_plot(
+                axs,
+                data_source[:, 0],
+                self.output_data[:, 4],
+                use_cycler=options["cycles"],
+                label=self.output_data_col[4],
+            )
             axs.set_xlabel("Time (s)")
 
             axs.set_ylabel("Error/Convergence (deg)")
         elif options_type == "omega":
             time = self.data_manager.time
 
-            self._overide_plot(axs, time, self.omegas_data[:,0], use_cycler=options["cycles"], label="Omega")
+            self._overide_plot(
+                axs,
+                time,
+                self.omegas_data[:, 0],
+                use_cycler=options["cycles"],
+                label="Omega",
+            )
             axs.set_xlabel("Time (s)")
             axs.set_ylabel("Omega (rad/s)")
 
         else:
-            raise ValueError(f"Unknown type {options_type}. Must be one of ['position', 'velocity', 'convergence']")
+            raise ValueError(
+                f"Unknown type {options_type}. Must be one of ['position', 'velocity', 'convergence']"
+            )
 
         return axs
 
     def get_help_option_plot(self) -> str:
-        """ Get the help option for the plot function
+        """Get the help option for the plot function
 
         Returns
         -------
@@ -406,7 +427,7 @@ class AO(Estimator):
         """
 
     def get_help_option_complete_plot(self) -> str:
-        """ Get the help option for the complete_plot function
+        """Get the help option for the complete_plot function
 
         Returns
         -------
@@ -421,8 +442,10 @@ class AO(Estimator):
             If True, plot each cycle separately
         """
 
-    def _complete_plot(self, fig: None | Figure = None, options: dict = {}) -> tuple[Figure, list[Axes]]:
-        """ Complete plot of the estimator
+    def _complete_plot(
+        self, fig: None | Figure = None, options: dict = {}
+    ) -> tuple[Figure, list[Axes]]:
+        """Complete plot of the estimator
 
         Parameters
         ----------
@@ -436,37 +459,19 @@ class AO(Estimator):
 
         self.color_cycler = colors.get_color_cycler()
 
-        self.plot(axs[0], options={
-            "type": "position",
-            **options
-            })
-        self.plot(axs[0], options={
-            "type": "position",
-            "leg": "leading",
-            **options
-            })
+        self.plot(axs[0], options={"type": "position", **options})
+        self.plot(axs[0], options={"type": "position", "leg": "leading", **options})
         self.color_cycler = colors.get_color_cycler()
-        self.plot(axs[1], options={
-            "type": "velocity",
-            **options
-            })
+        self.plot(axs[1], options={"type": "velocity", **options})
         self.color_cycler = colors.get_color_cycler()
-        self.plot(axs[2], options={
-            "type": "omega",
-            **options
-            })
+        self.plot(axs[2], options={"type": "omega", **options})
         self.color_cycler = colors.get_color_cycler()
-        self.plot(axs[3], options={
-            "type": "convergence",
-            **options
-            })
-
-
+        self.plot(axs[3], options={"type": "convergence", **options})
 
         return fig, axs
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     dm = DataManager()
     res = dm.load_data("P01", "exp_transition_03-S3_01", DS_TYPE.DEVILLEZ)
 
@@ -477,5 +482,8 @@ if __name__ == "__main__":
     ao = AO(dm)
     ao.compute()
 
-    fig, axs, = ao.complete_plot(None, {"cycles": False})
+    (
+        fig,
+        axs,
+    ) = ao.complete_plot(None, {"cycles": False})
     show()

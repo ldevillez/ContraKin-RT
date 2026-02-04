@@ -18,7 +18,6 @@ Example
 
 """
 
-
 import matplotlib.pyplot as plt
 import matplotlib.colors as clr
 from matplotlib.pyplot import rcParams
@@ -38,7 +37,10 @@ GRAY_STYLE = {
 
 LINESTYLE_CYCLE = ["solid", "dashed", "dashdot", "dotted", ":"]
 
-def lighten_color(color: str | tuple[float, float, float], amount:float =0.5) -> tuple[float, float, float]:
+
+def lighten_color(
+    color: str | tuple[float, float, float], amount: float = 0.5
+) -> tuple[float, float, float]:
     """
     Lightens the given color by multiplying (1-luminosity) by the given amount.
     Input can be matplotlib color string, hex string, or RGB tuple.
@@ -62,7 +64,7 @@ def lighten_color(color: str | tuple[float, float, float], amount:float =0.5) ->
     """
     try:
         c = mc.cnames[color]
-    except:
+    except KeyError:
         c = color
 
     c = colorsys.rgb_to_hls(*mc.to_rgb(c))
@@ -113,15 +115,12 @@ class ColormapCycler:
                 color_cycler = next(self.current_color_cycle)["color"]
 
             cmap_custom = clr.LinearSegmentedColormap.from_list(
-                    name,
-                    [
-                        color_background,
-                        color_cycler
-                    ])
+                name, [color_background, color_cycler]
+            )
             self.colormaps[name] = cmap_custom
 
-
         return self.colormaps[name]
+
 
 def get_color_cycler(linestyle: bool = False) -> defaultdict:
     """
@@ -144,7 +143,7 @@ def get_color_cycler(linestyle: bool = False) -> defaultdict:
         # If linestyle is True, add linestyle to the cycle
         linestyle_cycler = cycler("linestyle", LINESTYLE_CYCLE)
 
-        current_color_cycle =  linestyle_cycler * current_color_cycle
+        current_color_cycle = linestyle_cycler * current_color_cycle
 
     current_color_cycle = current_color_cycle()
 
@@ -157,7 +156,6 @@ if __name__ == "__main__":
     color_cycler = get_color_cycler(linestyle=True)
     a = color_cycler["test"]
     print(color_cycler)
-
 
     cmap = ColormapCycler().get_colormap("example")
     print(cmap)

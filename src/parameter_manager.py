@@ -18,6 +18,7 @@ from support import read_yaml
 
 parameters = read_yaml(Path("parameters.yml"))
 
+
 def set_parameters(obj) -> None:
     """
     Set parameters of the object with respect to the subject
@@ -57,6 +58,7 @@ def set_parameters(obj) -> None:
     else:
         print("Settings parameters for", type(obj), " is not implemented")
 
+
 if __name__ == "__main__":
     from data_manager import DataManager
     from dataset_manager import ds
@@ -67,11 +69,11 @@ if __name__ == "__main__":
     clme = CLME(dm)
 
     print("Before setting parameters:")
-    print("offset 0:", clme.offset[0,0])
-    print("offset 1:", clme.offset[1,0])
+    print("offset 0:", clme.offset[0, 0])
+    print("offset 1:", clme.offset[1, 0])
 
     set_parameters(clme)
     print("")
     print("After setting parameters:")
-    print("offset 0:", clme.offset[0,0])
-    print("offset 1:", clme.offset[1,0])
+    print("offset 0:", clme.offset[0, 0])
+    print("offset 1:", clme.offset[1, 0])

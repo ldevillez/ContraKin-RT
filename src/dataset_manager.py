@@ -53,7 +53,7 @@ contrakin_to_devillez = {
     "qd_pelvis_pitch": "joint_qd_qdd_qd_3",
     "q_pelvis_roll": "joint_q_q_4",
     "qd_pelvis_roll": "joint_qd_qdd_qd_4",
-        }
+}
 
 
 class ds(Enum):
@@ -63,6 +63,7 @@ class ds(Enum):
 
     NONE = "NONE"
     DEVILLEZ = "DEVILLEZ"
+
 
 def read_config_devillez(user: str) -> dict:
     """
@@ -88,7 +89,7 @@ def list_ds() -> list[ds]:
     List all the datasets available
     """
 
-    return [ ds.DEVILLEZ ]
+    return [ds.DEVILLEZ]
 
 
 def list_subject(ds_name: ds) -> list[str]:
@@ -112,7 +113,6 @@ def list_subject(ds_name: ds) -> list[str]:
 
         listdir.sort()
         return listdir
-
 
     print(f"{ds_name} is not a recognised ds")
     return []
@@ -146,7 +146,7 @@ def list_trial(user: str, ds_name: ds, full_trial=False) -> list[str]:
         if full_trial:
             for trials in ds_user_path.iterdir():
                 if trial.endswith(".txt"):
-                    list_of_trial.append(trial.split(".")[0])
+                    list_of_trials.append(trial.split(".")[0])
             return list_of_trials
 
         # The sub trials are defined in the config file
@@ -180,7 +180,7 @@ def convert_col(colname: str, ds_name: ds) -> str | None:
     """
     try:
         if ds_name == ds.DEVILLEZ:
-                return contrakin_to_devillez[colname]
+            return contrakin_to_devillez[colname]
         else:
             print(f"{ds_name} is not a recognised ds")
             return None
@@ -189,7 +189,9 @@ def convert_col(colname: str, ds_name: ds) -> str | None:
         return None
 
 
-def load(subject: str, trial: str, ds_name: ds, full_trial:bool = False) -> tuple[array, array, array, list, dict]:
+def load(
+    subject: str, trial: str, ds_name: ds, full_trial: bool = False
+) -> tuple[array, array, array, list, dict]:
     """
     Load data from the specified ds, subject and trial
 
@@ -245,7 +247,7 @@ def load_devillez(subject, trial, full_trial=False):
 
     # Get all the cols from the filename
     with open(filename) as f:
-        cols = f.readline().replace("\n","").split(" ")
+        cols = f.readline().replace("\n", "").split(" ")
 
     # Get idx in all thoses cols
     idx_of_cols = {}
@@ -285,10 +287,8 @@ def load_devillez(subject, trial, full_trial=False):
             print(f"Sub trial {sub_trial} not found in config")
             return array([]), array([]), array([]), [], {}, None
 
-
         if "leading" in trial_config:
             leading = trial_config["leading"]
-
 
         trial_config = trial_config["trials"][sub_trial]
         if isinstance(trial_config, list):
@@ -305,6 +305,7 @@ def load_devillez(subject, trial, full_trial=False):
         velocity = velocity[idx_bool]
 
     return time, angle, velocity, cols, idx_of_cols, leading
+
 
 if __name__ == "__main__":
     subjects = list_subject(ds.DEVILLEZ)

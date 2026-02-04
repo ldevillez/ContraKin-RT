@@ -26,7 +26,6 @@ Example
 > dm.plot(options={"type": "position", "leg": "leading", "art": "hip"})
 """
 
-import sys
 from pathlib import Path
 
 from numpy import array, zeros, where, savetxt
@@ -113,7 +112,7 @@ class DataManager:
         self.color_cycler = colors.get_color_cycler()
 
     def load_data(self, subject, trial, ds_name, full_trial=False) -> None:
-        """ Load the data from the ds into the data manager
+        """Load the data from the ds into the data manager
 
         Parameters
         ----------
@@ -136,13 +135,13 @@ class DataManager:
         self.trial = trial
         self.ds_name = ds_name
 
-        self.time, self._angle, self._velocity, self.cols, self.idx_of_cols, leading = ds.load(subject, trial, ds_name, full_trial)
+        self.time, self._angle, self._velocity, self.cols, self.idx_of_cols, leading = (
+            ds.load(subject, trial, ds_name, full_trial)
+        )
 
         if len(self.time) == 0:
             self.reverse = False
             return False
-
-
 
         self.leading = "Right"
         self.reverse = False
@@ -153,9 +152,8 @@ class DataManager:
 
         return True
 
-
     def get_data(self, cols: list) -> array:
-        """ Fetch the data from data manager
+        """Fetch the data from data manager
 
         Parameters
         ----------
@@ -185,13 +183,12 @@ class DataManager:
             else:
                 data_source = self._angle
 
-
             data_out[:, i] = data_source[:, self.idx_of_cols[col_converted]]
 
         return data_out
 
     def get_dt(self) -> float:
-        """ Get the time step
+        """Get the time step
 
         Returns
         -------
@@ -201,9 +198,8 @@ class DataManager:
 
         return self.time[1] - self.time[0]
 
-
     def get_dts(self) -> array:
-        """ Get the time steps
+        """Get the time steps
 
         Returns
         -------
@@ -219,7 +215,9 @@ class DataManager:
         """
 
         if "color" not in args:
-            style = self.color_cycler[args["label"] + self.ds_name.value + self.subject + self.trial]
+            style = self.color_cycler[
+                args["label"] + self.ds_name.value + self.subject + self.trial
+            ]
             args.update(style)
 
         use_cycler = False
@@ -229,7 +227,6 @@ class DataManager:
 
         if not hasattr(self, "cycler"):
             use_cycler = False
-
 
         if use_cycler:
             for idx_a, idx_b in self.cycler.cycle_idxs_generator():
@@ -243,15 +240,15 @@ class DataManager:
         return ax
 
     def export_data(
-            self,
-            hip=True,
-            knee=False,
-            position = True,
-            velocity = False,
-            leading = True,
-            following = False,
-            reduce_factor = 1
-            ) -> None:
+        self,
+        hip=True,
+        knee=False,
+        position=True,
+        velocity=False,
+        leading=True,
+        following=False,
+        reduce_factor=1,
+    ) -> None:
         """
         Get the data to export
 
@@ -298,12 +295,15 @@ class DataManager:
         data = self.get_data(cols)
         data = data[::reduce_factor, :]
 
-        savetxt(f"data/dm_{self.subject}_{self.trial}.txt", data, header=" ".join(cols), comments="")
-
-
+        savetxt(
+            f"data/dm_{self.subject}_{self.trial}.txt",
+            data,
+            header=" ".join(cols),
+            comments="",
+        )
 
     def plot(self, axs: None | Axes = None, options: dict = {}) -> Axes:
-        """ Plot the output data
+        """Plot the output data
         Parameters
         ----------
         axs : None | Axes
@@ -359,31 +359,30 @@ class DataManager:
         if "cycles" in options:
             use_cycles = options["cycles"]
 
-
-
-
         # Display position/velocity for the estimator or the true leg
         if options_type in ["position", "velocity"]:
-
-            art = 'hip' if is_hip else 'knee'
-            data_source = self.get_data([
-                "time",
-                f"q{'d' if is_velocity else ''}_{'r' if is_leading else 'l'}_{art}"
-                ])
+            art = "hip" if is_hip else "knee"
+            data_source = self.get_data(
+                [
+                    "time",
+                    f"q{'d' if is_velocity else ''}_{'r' if is_leading else 'l'}_{art}",
+                ]
+            )
 
             data = data_source
 
             filt = ExponentialFilter(0.8)
             data[:, 1] = filt.apply(data_source[:, 1])
 
-            idx_to_plot = where(data[:,0] - data[0, 0] < options_duration)[0]
+            idx_to_plot = where(data[:, 0] - data[0, 0] < options_duration)[0]
 
             self._overide_plot(
-                    axs,
-                    data[idx_to_plot,0], data[idx_to_plot,1],
-                    use_cycler=use_cycles,
-                    label=f"{'Leading' if is_leading else 'Following'} {art} ",
-                    )
+                axs,
+                data[idx_to_plot, 0],
+                data[idx_to_plot, 1],
+                use_cycler=use_cycles,
+                label=f"{'Leading' if is_leading else 'Following'} {art} ",
+            )
             axs.set_xlabel("Time (s)")
 
             if not is_velocity:
@@ -392,13 +391,12 @@ class DataManager:
                 axs.set_ylabel("Velocity (deg/s)")
 
         if options_type in ["task_mask"]:
-            color_cycler = colors.get_color_cycler()
-
+            self.color_cycler = colors.get_color_cycler()
 
         return axs
 
     def get_help_option_plot(self) -> str:
-        """ Get the help option for the plot function
+        """Get the help option for the plot function
 
         Returns
         -------
@@ -417,8 +415,10 @@ class DataManager:
             Articulation to plot. Can be "hip" or "knee"
         """
 
-    def complete_plot(self, fig: None | Figure = None, options: dict = {}) -> tuple[Figure, list[Axes]]:
-        """ Complete plot of the estimator
+    def complete_plot(
+        self, fig: None | Figure = None, options: dict = {}
+    ) -> tuple[Figure, list[Axes]]:
+        """Complete plot of the estimator
         Each estimator will redefine the sub function _complete_plot
 
         Parameters
@@ -445,7 +445,6 @@ class DataManager:
 
         self.color_cycler = colors.get_color_cycler()
 
-
         axs = fig.subplots(2, 2)
 
         self.task = TaskManager(self)
@@ -453,9 +452,12 @@ class DataManager:
         if not use_cycles:
             for axs_x in axs:
                 for axs_y in axs_x:
-                    self.plot(axs_y, options={
-                        "type": "task_mask",
-                        })
+                    self.plot(
+                        axs_y,
+                        options={
+                            "type": "task_mask",
+                        },
+                    )
         type_items = ["position", "velocity"]
         leg_items = ["leading", "following"]
         art_items = ["hip", "knee"]
@@ -468,35 +470,38 @@ class DataManager:
         for i, type_item in enumerate(type_items):
             for j, leg_item in enumerate(leg_items):
                 for k, art_item in enumerate(art_items):
-
                     idx_col = k
                     if is_side_separated:
                         idx_col = j
 
                     # Change j based on options
-                    self.plot(axs[i][idx_col], options={
-                        "type": type_item,
-                        "leg": leg_item,
-                        "art": art_item,
-                        "cycles": use_cycles
-                    })
-
-                    if type_item == "velocity":
-                        # Change j based on options
-                        self.plot(axs[i][idx_col], options={
+                    self.plot(
+                        axs[i][idx_col],
+                        options={
                             "type": type_item,
                             "leg": leg_item,
                             "art": art_item,
-                            "derivative": True,
-                            "cycles": use_cycles
-                        })
+                            "cycles": use_cycles,
+                        },
+                    )
 
+                    if type_item == "velocity":
+                        # Change j based on options
+                        self.plot(
+                            axs[i][idx_col],
+                            options={
+                                "type": type_item,
+                                "leg": leg_item,
+                                "art": art_item,
+                                "derivative": True,
+                                "cycles": use_cycles,
+                            },
+                        )
 
         labels_tsk = []
         handels_tsk = []
         for i in range(axs.shape[0]):
             for j in range(axs.shape[1]):
-
                 handels_raw, labels_raw = axs[i][j].get_legend_handles_labels()
 
                 labels = []
@@ -514,8 +519,6 @@ class DataManager:
 
                 axs[i][j].legend(handels, labels, loc="upper right")
 
-
-
                 if i != 0 or j != 0:
                     axs[i][j].sharex(axs[0][0])
 
@@ -524,15 +527,12 @@ class DataManager:
 
         fig.suptitle(f"{self.subject} - {self.trial}")
 
-
         fig.legend(handels_tsk, labels_tsk, loc="lower center", ncol=len(labels_tsk))
-
 
         return fig, axs
 
 
-
-class DataManagersIterator():
+class DataManagersIterator:
     """
     Iterator to manage the ds/subject/trials structrue
     """
@@ -560,9 +560,8 @@ class DataManagersIterator():
 
         self.internal_len = -1
 
-
     def _parselist(self, raw_data, level: int = 0) -> dict:
-        """ Parse a list of trials to a dictionary
+        """Parse a list of trials to a dictionary
 
         Parameters
         ----------
@@ -581,11 +580,11 @@ class DataManagersIterator():
             if raw_data is None:
                 return []
             if isinstance(raw_data, str):
-                return [ raw_data ]
+                return [raw_data]
             if isinstance(raw_data, list):
                 for item in raw_data:
                     if not isinstance(item, str):
-                        raise ValueError(f"Final level of the list should be str")
+                        raise ValueError("Final level of the list should be str")
                 return raw_data
             if isinstance(raw_data, dict) and len(raw_data) == 0:
                 return []
@@ -611,7 +610,7 @@ class DataManagersIterator():
         return out_data
 
     def load_list(self, filename) -> None:
-        """ Load the list of trials from a file
+        """Load the list of trials from a file
 
         Parameters
         ----------
@@ -632,50 +631,68 @@ class DataManagersIterator():
         else:
             self.blacklist = self._parselist(data["blacklist"], 3)
 
-
     def __iter__(self):
         """
         Iterate
         """
 
         for ds_name in ds.list_ds():
-
             # If the whitelist is not empty and the ds is not in it
             if ds_name.value not in self.whitelist and len(self.whitelist) > 0:
                 continue
 
-
             # If the blacklist is not empty and the ds is in it
-            if ds_name.value in self.blacklist and len(self.blacklist[ds_name.value]) == 0:
+            if (
+                ds_name.value in self.blacklist
+                and len(self.blacklist[ds_name.value]) == 0
+            ):
                 continue
 
             for user_name in ds.list_subject(ds_name):
                 # If the whitelist is not empty and the user is not in it
-                if ds_name.value in self.whitelist and user_name not in self.whitelist[ds_name.value] and len(self.whitelist[ds_name.value]) > 0:
+                if (
+                    ds_name.value in self.whitelist
+                    and user_name not in self.whitelist[ds_name.value]
+                    and len(self.whitelist[ds_name.value]) > 0
+                ):
                     continue
 
                 # If the blacklist is not empty and the user is in it
-                if ds_name.value in self.blacklist and user_name in self.blacklist[ds_name.value] and len(self.blacklist[ds_name.value][user_name]) == 0:
+                if (
+                    ds_name.value in self.blacklist
+                    and user_name in self.blacklist[ds_name.value]
+                    and len(self.blacklist[ds_name.value][user_name]) == 0
+                ):
                     continue
 
-
                 for trial_name in ds.list_trial(user_name, ds_name):
-
                     # If the whitelist is not empty and the trial is not in it
                     should_keep = False
-                    if ds_name.value in self.whitelist and user_name in self.whitelist[ds_name.value] and trial_name not in self.whitelist[ds_name.value][user_name] and len(self.whitelist[ds_name.value][user_name]) > 0:
-
+                    if (
+                        ds_name.value in self.whitelist
+                        and user_name in self.whitelist[ds_name.value]
+                        and trial_name not in self.whitelist[ds_name.value][user_name]
+                        and len(self.whitelist[ds_name.value][user_name]) > 0
+                    ):
                         # We look for all the trial in the whitelist to see if they match the prefix
                         for prefix_name in self.whitelist[ds_name.value][user_name]:
                             if prefix_name in trial_name:
-
                                 # If it match and the list is empty we keep it
-                                if len (self.whitelist[ds_name.value][user_name][prefix_name]) == 0:
+                                if (
+                                    len(
+                                        self.whitelist[ds_name.value][user_name][
+                                            prefix_name
+                                        ]
+                                    )
+                                    == 0
+                                ):
                                     should_keep = True
                                     break
 
                                 # If it match and the list is not empty we look for the suffix
-                                for suffix_name in self.whitelist[ds_name.value][user_name][prefix_name]:
+                                for suffix_name in self.whitelist[ds_name.value][
+                                    user_name
+                                ][prefix_name]:
                                     total_name = prefix_name + suffix_name
                                     # if the total name match we keep it
                                     if total_name == trial_name:
@@ -688,7 +705,10 @@ class DataManagersIterator():
                             continue
 
                     # If the blacklist is not empty and the trial is in it
-                    if ds_name.value in self.blacklist and user_name in self.blacklist[ds_name.value]:
+                    if (
+                        ds_name.value in self.blacklist
+                        and user_name in self.blacklist[ds_name.value]
+                    ):
                         if trial_name in self.blacklist[ds_name.value][user_name]:
                             continue
 
@@ -696,14 +716,22 @@ class DataManagersIterator():
                         should_keep = True
                         for prefix_name in self.blacklist[ds_name.value][user_name]:
                             if prefix_name in trial_name:
-
                                 # If it match and the list is empty we do not keep it
-                                if len (self.whitelist[ds_name.value][user_name][prefix_name]) == 0:
+                                if (
+                                    len(
+                                        self.whitelist[ds_name.value][user_name][
+                                            prefix_name
+                                        ]
+                                    )
+                                    == 0
+                                ):
                                     should_keep = False
                                     break
 
                                 # If it match and the list is not empty we look for the suffix
-                                for suffix_name in self.whitelist[ds_name.value][user_name][prefix_name]:
+                                for suffix_name in self.whitelist[ds_name.value][
+                                    user_name
+                                ][prefix_name]:
                                     total_name = prefix_name + suffix_name
                                     # if the total name match we do not keep it
                                     if total_name == trial_name:
@@ -714,13 +742,10 @@ class DataManagersIterator():
                         if not should_keep:
                             continue
 
-
-
-
                     yield ds_name, user_name, trial_name
 
     def get_number_of_elements(self) -> int:
-        """ Get the number of elements in the iterator
+        """Get the number of elements in the iterator
 
         Returns
         -------
@@ -737,7 +762,7 @@ class DataManagersIterator():
         return count
 
     def __len__(self) -> int:
-        """ Get the length of the iterator
+        """Get the length of the iterator
 
         Returns
         -------
@@ -750,8 +775,9 @@ class DataManagersIterator():
 
         return self.internal_len
 
+
 def get_populated_dmi() -> DataManagersIterator:
-    """ Get a populated DataManagersIterator
+    """Get a populated DataManagersIterator
 
     Returns
     -------
@@ -786,60 +812,84 @@ def compare_datamanagers(dm1, dm2):
 
     dm1.color_cycler = dm2.color_cycler
 
-    fig = plt.figure()
-    axs = fig.subplots(2,2)
-    dm1.plot(axs[0, 0], options={
-        "leg": "leading",
-        "art": "hip",
-        "cycles": True,
-    })
-    dm2.plot(axs[0,0], options={
-        "leg": "leading",
-        "art": "hip",
-        "cycles": True,
-    })
+    fig = figure()
+    axs = fig.subplots(2, 2)
+    dm1.plot(
+        axs[0, 0],
+        options={
+            "leg": "leading",
+            "art": "hip",
+            "cycles": True,
+        },
+    )
+    dm2.plot(
+        axs[0, 0],
+        options={
+            "leg": "leading",
+            "art": "hip",
+            "cycles": True,
+        },
+    )
 
-    dm1.plot(axs[0, 1], options={
-        "leg": "leading",
-        "art": "knee",
-        "cycles": True,
-    })
-    dm2.plot(axs[0,1], options={
-        "leg": "leading",
-        "art": "knee",
-        "cycles": True,
-    })
+    dm1.plot(
+        axs[0, 1],
+        options={
+            "leg": "leading",
+            "art": "knee",
+            "cycles": True,
+        },
+    )
+    dm2.plot(
+        axs[0, 1],
+        options={
+            "leg": "leading",
+            "art": "knee",
+            "cycles": True,
+        },
+    )
 
-    dm1.plot(axs[1, 0], options={
-        "leg": "leading",
-        "type": "velocity",
-        "art": "hip",
-        "cycles": True,
-    })
-    dm2.plot(axs[1,0], options={
-        "leg": "leading",
-        "type": "velocity",
-        "art": "hip",
-        "cycles": True,
-    })
+    dm1.plot(
+        axs[1, 0],
+        options={
+            "leg": "leading",
+            "type": "velocity",
+            "art": "hip",
+            "cycles": True,
+        },
+    )
+    dm2.plot(
+        axs[1, 0],
+        options={
+            "leg": "leading",
+            "type": "velocity",
+            "art": "hip",
+            "cycles": True,
+        },
+    )
 
-    dm1.plot(axs[1, 1], options={
-        "leg": "leading",
-        "type": "velocity",
-        "art": "knee",
-        "cycles": True,
-    })
-    dm2.plot(axs[1,1], options={
-        "leg": "leading",
-        "type": "velocity",
-        "art": "knee",
-        "cycles": True,
-    })
+    dm1.plot(
+        axs[1, 1],
+        options={
+            "leg": "leading",
+            "type": "velocity",
+            "art": "knee",
+            "cycles": True,
+        },
+    )
+    dm2.plot(
+        axs[1, 1],
+        options={
+            "leg": "leading",
+            "type": "velocity",
+            "art": "knee",
+            "cycles": True,
+        },
+    )
 
     return fig, axs
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     # Iterate over the data managers iterator using the dmi with rules from PATH_TRIAL_LIST applied
     dmi = get_populated_dmi()
     for ds_name, subject, trial in dmi:

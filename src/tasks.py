@@ -18,7 +18,15 @@ Example
 
 import enum
 
-from numpy import zeros, array, nonzero, logical_xor, logical_and, asarray, minimum, maximum, logical_or
+from numpy import (
+    zeros,
+    array,
+    nonzero,
+    logical_xor,
+    logical_and,
+    asarray,
+    logical_or,
+)
 from numpy import abs as npabs
 from numpy import max as npmax
 
@@ -27,6 +35,7 @@ from matplotlib.pyplot import figure, show
 from support import moving_average_and_extend
 
 import colors
+
 
 def get_interval(mask: array) -> array:
     """
@@ -53,13 +62,16 @@ def get_interval(mask: array) -> array:
     if mask[0] and mask[1]:
         intervals.append(0)
 
-    intervals.extend(nonzero(
-        logical_and(
-            logical_xor(mask[1:-1] != mask[:-2], mask[1:-1] != mask[2:]), # remove one size
-            mask[1:-1]  # keep only the ones that are True
+    intervals.extend(
+        nonzero(
+            logical_and(
+                logical_xor(
+                    mask[1:-1] != mask[:-2], mask[1:-1] != mask[2:]
+                ),  # remove one size
+                mask[1:-1],  # keep only the ones that are True
             )
-        )[0])
-
+        )[0]
+    )
 
     if mask[-1] and mask[-2]:
         intervals.append(len(mask) - 1)
@@ -72,7 +84,10 @@ def get_interval(mask: array) -> array:
 
     return intervals
 
-def get_first_and_last_threshold(mask: array, time: array, threshold: float = 0.5, max_time_lookout: float = 15) -> tuple:
+
+def get_first_and_last_threshold(
+    mask: array, time: array, threshold: float = 0.5, max_time_lookout: float = 15
+) -> tuple:
     """
     Get the Idx of the first and last threshold crossing in the mask.
     The threshold is defined as a percentage of the maximum value of the mask.
@@ -106,7 +121,6 @@ def get_first_and_last_threshold(mask: array, time: array, threshold: float = 0.
     threshold_value_first = threshold * max_value_first
     threshold_value_last = threshold * max_value_last
 
-
     idxs_first = nonzero(mask >= threshold_value_first)[0]
     idxs_last = nonzero(mask >= threshold_value_last)[0]
 
@@ -135,6 +149,7 @@ class Task(enum.Enum):
             List of all task names
         """
         return [task.value for task in cls]
+
 
 class TaskManager:
     """
@@ -181,8 +196,6 @@ class TaskManager:
         """
         return list(self.task_masks.keys())
 
-
-
     def get_tasks_mask(self) -> dict:
         """
         Divide the tasks into a dictionary of tasks and their respective mask.
@@ -203,35 +216,77 @@ class TaskManager:
 
         self.n_elements = len(data_source)
 
-        data_filtered_leading = moving_average_and_extend(data_source[:, 1], 15).reshape(-1)
-        data_filtered_following = moving_average_and_extend(data_source[:, 2], 15).reshape(-1)
-
+        data_filtered_leading = moving_average_and_extend(
+            data_source[:, 1], 15
+        ).reshape(-1)
+        data_filtered_following = moving_average_and_extend(
+            data_source[:, 2], 15
+        ).reshape(-1)
 
         # Maybe taking directly the max value is too harsh if there is one outlier
-        first_transition_start_leading, last_transition_end_leading = get_first_and_last_threshold(data_filtered_leading, data_source[:,0], 0.1)
-        first_transition_end_leading, last_transition_start_leading = get_first_and_last_threshold(data_filtered_leading, data_source[:, 0], 0.75)
+        first_transition_start_leading, last_transition_end_leading = (
+            get_first_and_last_threshold(data_filtered_leading, data_source[:, 0], 0.1)
+        )
+        first_transition_end_leading, last_transition_start_leading = (
+            get_first_and_last_threshold(data_filtered_leading, data_source[:, 0], 0.75)
+        )
 
-        first_transition_start_following , last_transition_end_following = get_first_and_last_threshold(data_filtered_following, data_source[:,0], 0.1)
-        first_transition_end_following, last_transition_start_following = get_first_and_last_threshold(data_filtered_following, data_source[:, 0], 0.75)
+        first_transition_start_following, last_transition_end_following = (
+            get_first_and_last_threshold(
+                data_filtered_following, data_source[:, 0], 0.1
+            )
+        )
+        first_transition_end_following, last_transition_start_following = (
+            get_first_and_last_threshold(
+                data_filtered_following, data_source[:, 0], 0.75
+            )
+        )
 
+        if (
+            first_transition_start_leading is None
+            or last_transition_end_leading is None
+        ):
+            raise ValueError(
+                "Not enough data to define tasks. Check the data source or the threshold."
+            )
 
-        if first_transition_start_leading is None or last_transition_end_leading is None:
-            raise ValueError("Not enough data to define tasks. Check the data source or the threshold.")
+        if (
+            first_transition_end_leading is None
+            or last_transition_start_leading is None
+        ):
+            raise ValueError(
+                "Not enough data to define tasks. Check the data source or the threshold."
+            )
 
-        if first_transition_end_leading is None or last_transition_start_leading is None:
-            raise ValueError("Not enough data to define tasks. Check the data source or the threshold.")
+        if (
+            first_transition_start_following is None
+            or last_transition_end_following is None
+        ):
+            raise ValueError(
+                "Not enough data to define tasks. Check the data source or the threshold."
+            )
 
-        if first_transition_start_following is None or last_transition_end_following is None:
-            raise ValueError("Not enough data to define tasks. Check the data source or the threshold.")
+        if (
+            first_transition_end_following is None
+            or last_transition_start_following is None
+        ):
+            raise ValueError(
+                "Not enough data to define tasks. Check the data source or the threshold."
+            )
 
-        if first_transition_end_following is None or last_transition_start_following is None:
-            raise ValueError("Not enough data to define tasks. Check the data source or the threshold.")
+        first_transition_start = min(
+            first_transition_start_leading, first_transition_start_following
+        )
+        first_transition_end = max(
+            first_transition_end_leading, first_transition_end_following
+        )
 
-        first_transition_start = min(first_transition_start_leading, first_transition_start_following)
-        first_transition_end = max(first_transition_end_leading, first_transition_end_following)
-
-        last_transition_start = min(last_transition_start_leading, last_transition_start_following)
-        last_transition_end = max(last_transition_end_leading, last_transition_end_following)
+        last_transition_start = min(
+            last_transition_start_leading, last_transition_start_following
+        )
+        last_transition_end = max(
+            last_transition_end_leading, last_transition_end_following
+        )
 
         mask_standing = zeros(len(data_filtered_leading), dtype=bool)
         mask_transition_in = zeros(len(data_filtered_leading), dtype=bool)
@@ -289,7 +344,9 @@ class TaskManager:
         mask_flattened = zeros(len(self.task_masks[Task.Transition.value]))
 
         for idx, task_name in enumerate(Task.get_all_tasks()):
-            mask_flattened[self.task_masks[task_name]] = idx + 1 # Start from 1 to avoid confusion with False (0)
+            mask_flattened[self.task_masks[task_name]] = (
+                idx + 1
+            )  # Start from 1 to avoid confusion with False (0)
 
         return mask_flattened
 
@@ -331,7 +388,9 @@ class TaskManager:
         """
 
         if self.n_elements != len(data):
-            raise ValueError("Data length does not match the number of elements in the TaskManager")
+            raise ValueError(
+                "Data length does not match the number of elements in the TaskManager"
+            )
 
         empty_mask = zeros(len(data), dtype=bool)
 
@@ -354,7 +413,13 @@ class TaskManager:
                 continue
             intervals = self.get_interval(task_name)
             for i in range(len(intervals)):
-                axs.axvspan(time[intervals[i, 0]], time[intervals[i, 1]], **color_cycler[task_name], alpha=0.2, label="tsk " + task_name)
+                axs.axvspan(
+                    time[intervals[i, 0]],
+                    time[intervals[i, 1]],
+                    **color_cycler[task_name],
+                    alpha=0.2,
+                    label="tsk " + task_name,
+                )
 
     def add_legend(self, ax):
         """
@@ -370,12 +435,18 @@ class TaskManager:
                 continue
             label_processed = label.replace("tsk ", "")
             if label_processed not in labels:
-
                 labels.append(label_processed)
                 handles.append(handel)
 
-        lg = ax.legend(handles, labels, bbox_to_anchor=(0.5, 1.1), loc="lower center", ncol=len(handles))
+        lg = ax.legend(
+            handles,
+            labels,
+            bbox_to_anchor=(0.5, 1.1),
+            loc="lower center",
+            ncol=len(handles),
+        )
         ax.add_artist(lg)
+
 
 if __name__ == "__main__":
     subject_name = "P01"
@@ -394,7 +465,9 @@ if __name__ == "__main__":
             intervals = tm.get_interval(task_name)
             print(f"Task: {task_name}")
             for i in range(len(intervals)):
-                print(f"  Start: {dm.time[intervals[i,0]]:.3f} s, End: {dm.time[intervals[i,1]]:.3f} s")
+                print(
+                    f"  Start: {dm.time[intervals[i, 0]]:.3f} s, End: {dm.time[intervals[i, 1]]:.3f} s"
+                )
 
         # Plot tasks
         fig = figure()
@@ -402,7 +475,6 @@ if __name__ == "__main__":
         tm.plot(ax, dm.time)
         tm.add_legend(ax)
         show()
-
 
     else:
         print("Data not found")
