@@ -1,0 +1,20 @@
+CLME:
+  DEVILLEZ:
+    P01:
+      offset_pos: 7.59
+      offset_vel: 12.2
+    P02:
+      offset_pos: 2
+      offset_vel: 20.2
+    P03:
+      offset_pos: 8.21
+      offset_vel: 28.1
+    P04:
+      offset_pos: 16.0
+      offset_vel: 0.0
+    P05:
+      offset_pos: 24.8
+      offset_vel: -25
+    P06:
+      offset_pos: 24.8
+      offset_vel: -5

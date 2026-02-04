@@ -1,0 +1,25 @@
+whitelist:
+  DEVILLEZ:
+    P01:
+      - exp_transition_03
+    P02:
+      - exp_transition_03
+    P03:
+      - exp_transition_03
+    P04:
+      - exp_transition_03
+    P05:
+      - exp_transition_03
+    P06:
+      - exp_transition_03
+blacklist:
+  NONE:
+  DEVILLEZ:
+    P02:
+      - exp_transition_03_1-S3_01
+      - exp_transition_03_1-S3_08  # Too long
+    P04:
+      - exp_transition_03-S3_16 # Too many trials
+    P05:
+      - exp_transition_03-S3_08
+      - exp_transition_03-S3_14
