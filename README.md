@@ -1,5 +1,7 @@
 # ContraKin-RT
 
+[![DOI](https://zenodo.org/badge/1149863443.svg)](https://doi.org/10.5281/zenodo.18509311)
+
 This repository contains the code for the paper "Design and Control of an Active Prosthesis for Replacing the Hip after Disarticulation".
 
 The code estimates the kinematics of a hip joint based on the kinematics of the contralateral leg using:
