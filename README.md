@@ -2,7 +2,7 @@
 
 [![DOI](https://zenodo.org/badge/1149863443.svg)](https://doi.org/10.5281/zenodo.18509311)
 
-This repository contains the code for the paper "Design and Control of an Active Prosthesis for Replacing the Hip after Disarticulation".
+This repository contains the code for the paper "Design and Control of the AUHRA Active Prosthesis for Replacing the Hip after Disarticulation" (submitted).
 
 The code estimates the kinematics of a hip joint based on the kinematics of the contralateral leg using:
 - **CLME (Complementary Limb Motion Estimation)** ([paper](https://ieeexplore.ieee.org/abstract/document/4668434))
@@ -13,7 +13,8 @@ The code estimates the kinematics of a hip joint based on the kinematics of the 
 - `src/`: Contains the source code for the project.
 
 ## Datasets
-The datasets used for evaluation are stored in the `datasets/` folder. The code is made to interface directly with the Devillez dataset.
+The datasets used for evaluation are stored in the `datasets/` folder.
+The code is made to interface directly with the Devillez dataset: `Devillez, Louis, 2026, "IMU-Based Lower-Limb Kinematics Dataset for Treadmill Walking with Gait Transitions", https://doi.org/10.14428/DVN/ZEYMF5, Open Data @ UCLouvain`
 
 To load and use datasets, refer to the [dataset_manager.py](src/dataset_manager.py) script.
 

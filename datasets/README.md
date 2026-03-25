@@ -2,3 +2,4 @@
 
 This folder should contain all the datasets used.
 Then, the [datasets loading script](../src/dataset_manager.py) need to be modified to load the datasets from this folder.
+You can find the Devillez datasets [here](https://doi.org/10.14428/DVN/ZEYMF5)
