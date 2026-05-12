@@ -73,13 +73,16 @@ class AO(Estimator):
     __old_eval: array
     _omegas_data: array
 
-    def __init__(self, source_of_data: DataManager, n_osc: float = 2) -> None:
+    def __init__(self, source_of_data: DataManager, n_osc: int = 2) -> None:
         """
         Initialize a AO estimator with a data manager
 
         Parameters
         ----------
         source_of_data : DataManager
+            Data manager to get the data from to compute the estimation
+        n_osc : int
+            Number of oscillators to use for the estimation. Default is 2
         """
 
         super().__init__("AO", source_of_data)
